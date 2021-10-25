@@ -42,7 +42,7 @@ const employeeSchema = new mongoose.Schema({
 employeeSchema.methods.generateAuthToken = async function(){
     try {
         // this is going to console the id of the object created using new Register 
-        console.log(this._id);
+        // console.log(this._id);
 
         // this is going to take the id as payload and change the result into a jwt token 
         const token = await jwt.sign({_id:this._id},process.env.SECRET_KEY);

@@ -52,7 +52,7 @@ app.post("/login", async (req, res) => {
         // console.log(Data.password);
         // const isMatched = await bcrypt.compare(password, Data.password);
         const token = await Data.generateAuthToken();
-        console.log(token);
+        // console.log(token);
         // console.log(isMatched);
         if (password==Data.password) {
             res.render("index");
@@ -86,6 +86,9 @@ app.post("/register", async (req, res) => {
 
         const token = await registerEmployee.generateAuthToken();
         console.log(token);
+
+        res.cookie("jwt",token,{expires:new Date(Date.now() + 3000)
+        , httpOnly : true});
 
             const register = await registerEmployee.save();
             res.render("index");
