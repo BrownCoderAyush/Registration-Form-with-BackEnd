@@ -30,6 +30,10 @@ app.use(express.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
     res.render("index");
 })
+app.get("/secret",(req,res)=>{
+    console.log(`this is awsome ${res.cookie.jwt}`);
+    res.render("secret");
+})
 app.get("/login", (req, res) => {
     res.render("login");
 })
@@ -54,6 +58,7 @@ app.post("/login", async (req, res) => {
         const token = await Data.generateAuthToken();
         // console.log(token);
         // console.log(isMatched);
+        res.cookie("jwt",token,{expires:new Date(Date.now() + 30000)});
         if (password==Data.password) {
             res.render("index");
         }
