@@ -4,6 +4,9 @@ const bcrypt = require("bcryptjs");
 const { read } = require("fs");
 const hbs = require("hbs");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const auth = require("./middleware/auth");
+
 const port = process.env.PORT || 8000;
 const app = express();
 require("../src/db/conn");
@@ -22,6 +25,7 @@ app.set("views", path.join(__dirname, "../templete/views"));
 hbs.registerPartials(path.join(__dirname, "../templete/partials"));
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 
 // console.log(process.env.SECRET_KEY);
@@ -30,10 +34,27 @@ app.use(express.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
     res.render("index");
 })
-app.get("/secret",(req,res)=>{
-    console.log(`this is awsome ${res.cookie.jwt}`);
+app.get("/secret",auth,(req,res)=>{
+    console.log(req.user);
+
+    // console.log(`this is awsome ${req.cookies.jwt}`);
+    
     res.render("secret");
+}) 
+app.get("/logout",auth,async(req,res)=>{
+    try {
+        
+
+        console.log(req.user)
+        res.clearCookie("jwt");
+        console.log("login");
+
+        res.render("login");
+    } catch (error) {
+        res.status(500).send(error);
+    }
 })
+
 app.get("/login", (req, res) => {
     res.render("login");
 })
@@ -90,9 +111,9 @@ app.post("/register", async (req, res) => {
         // this is going to run the generateAuthToken function present in registerEmployee
 
         const token = await registerEmployee.generateAuthToken();
-        console.log(token);
+        // console.log(token);
 
-        res.cookie("jwt",token,{expires:new Date(Date.now() + 3000)
+        res.cookie("jwt",token,{expires:new Date(Date.now() + 30000)
         , httpOnly : true});
 
             const register = await registerEmployee.save();
@@ -120,6 +141,8 @@ app.post("/register", async (req, res) => {
 //     console.log(isVerify);
 // }
 // createToken();
+
+
 app.listen(port, () => {
     console.log(`server running at port no ${port}`);
 })
