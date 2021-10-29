@@ -43,10 +43,13 @@ app.get("/secret",auth,(req,res)=>{
 }) 
 app.get("/logout",auth,async(req,res)=>{
     try {
-        
+        req.user.tokens = req.user.tokens.filter((currElement)=>{
+            return currElement.token != req.token ;
+        })
 
-        console.log(req.user)
         res.clearCookie("jwt");
+        console.log(req.user);
+        await req.user.save();
         console.log("login");
 
         res.render("login");
