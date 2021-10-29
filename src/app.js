@@ -5,6 +5,7 @@ const { read } = require("fs");
 const hbs = require("hbs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+
 const auth = require("./middleware/auth");
 
 const port = process.env.PORT || 8000;
@@ -70,8 +71,8 @@ app.post("/login", async (req, res) => {
         // console.log(password);
         const email = req.body.email;
         const password = req.body.password;
-      
-        
+
+
         const Data = await Register.findOne({ email: email });
         // console.log("hashed password is~~~~~~~");
         // console.log(password);
@@ -82,8 +83,17 @@ app.post("/login", async (req, res) => {
         const token = await Data.generateAuthToken();
         // console.log(token);
         // console.log(isMatched);
+
         res.cookie("jwt",token,{expires:new Date(Date.now() + 30000)});
         if (password==Data.password) {
+
+        res.cookie("jwt", token, {
+            expires: new Date(Date.now() + 5000)
+            , httpOnly: true,
+            // secure: true
+        });
+        if (password == Data.password) {
+
             res.render("index");
         }
         else {
@@ -110,14 +120,23 @@ app.post("/register", async (req, res) => {
                 confirmPassword: req.body.confirmPassword,
                 phone: req.body.Phone,
             });
-        // console.log(`the success part is ~~~ ${registerEmployee}`);
-        // this is going to run the generateAuthToken function present in registerEmployee
+            // console.log(`the success part is ~~~ ${registerEmployee}`);
+            // this is going to run the generateAuthToken function present in registerEmployee
 
         const token = await registerEmployee.generateAuthToken();
         // console.log(token);
 
         res.cookie("jwt",token,{expires:new Date(Date.now() + 30000)
         , httpOnly : true});
+
+            const token = await registerEmployee.generateAuthToken();
+            console.log(token);
+
+            res.cookie("jwt", token, {
+                expires: new Date(Date.now() + 3000)
+                , httpOnly: true
+            });
+
 
             const register = await registerEmployee.save();
             res.render("index");
