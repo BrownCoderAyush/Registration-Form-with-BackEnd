@@ -5,6 +5,9 @@ const { read } = require("fs");
 const hbs = require("hbs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+
+const auth = require("./middleware/auth");
+
 const port = process.env.PORT || 8000;
 const app = express();
 require("../src/db/conn");
@@ -32,6 +35,30 @@ app.use(express.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
     res.render("index");
 })
+app.get("/secret",auth,(req,res)=>{
+    console.log(req.user);
+
+    // console.log(`this is awsome ${req.cookies.jwt}`);
+    
+    res.render("secret");
+}) 
+app.get("/logout",auth,async(req,res)=>{
+    try {
+        req.user.tokens = req.user.tokens.filter((currElement)=>{
+            return currElement.token != req.token ;
+        })
+
+        res.clearCookie("jwt");
+        console.log(req.user);
+        await req.user.save();
+        console.log("login");
+
+        res.render("login");
+    } catch (error) {
+        res.status(500).send(error);
+    }
+})
+
 app.get("/login", (req, res) => {
     res.render("login");
 })
@@ -56,12 +83,17 @@ app.post("/login", async (req, res) => {
         const token = await Data.generateAuthToken();
         // console.log(token);
         // console.log(isMatched);
+
+        res.cookie("jwt",token,{expires:new Date(Date.now() + 30000)});
+        if (password==Data.password) {
+
         res.cookie("jwt", token, {
             expires: new Date(Date.now() + 5000)
             , httpOnly: true,
             // secure: true
         });
         if (password == Data.password) {
+
             res.render("index");
         }
         else {
@@ -91,6 +123,12 @@ app.post("/register", async (req, res) => {
             // console.log(`the success part is ~~~ ${registerEmployee}`);
             // this is going to run the generateAuthToken function present in registerEmployee
 
+        const token = await registerEmployee.generateAuthToken();
+        // console.log(token);
+
+        res.cookie("jwt",token,{expires:new Date(Date.now() + 30000)
+        , httpOnly : true});
+
             const token = await registerEmployee.generateAuthToken();
             console.log(token);
 
@@ -98,6 +136,7 @@ app.post("/register", async (req, res) => {
                 expires: new Date(Date.now() + 3000)
                 , httpOnly: true
             });
+
 
             const register = await registerEmployee.save();
             res.render("index");
@@ -124,6 +163,8 @@ app.post("/register", async (req, res) => {
 //     console.log(isVerify);
 // }
 // createToken();
+
+
 app.listen(port, () => {
     console.log(`server running at port no ${port}`);
 })
